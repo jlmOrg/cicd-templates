@@ -12,10 +12,10 @@ on:
         required: false
         type: string
         default: '3.13'
-      ecr-registry:
-        description: 'ECR registry address'
-        required: true
-        type: string
+
+env:
+  ecr-registry: '550487074477.dkr.ecr.us-east-1.amazonaws.com'
+  ecr-region: 'us-east-1'
 
 jobs:
   docker-build:
@@ -150,17 +150,17 @@ jobs:
         run: docker load < ${{ inputs.image-name }}.tar
 
       - name: Tag Image
-        run: docker tag $IMAGE_TAG ${{ inputs.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
+        run: docker tag $IMAGE_TAG ${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
 
       - name: Configure AWS Creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ env.ecr-region }}
 
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push image to ECR
-        run: docker push ${{ inputs.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
+        run: docker push ${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
