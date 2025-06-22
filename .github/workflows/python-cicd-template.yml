@@ -1,13 +1,17 @@
 name: CI/CD Pipeline
 
 on:
-  pull_request:
-    branches: [ master ]
-  push:
-    branches: [ master ]
-
-env:
-  IMAGE_NAME: python-hello-service
+  workflow_call:
+    inputs:
+      image-name:
+        description: 'Docker image name'
+        required: true
+        type: string
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.13'
 
 jobs:
   docker-build:
@@ -18,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Docker Image
-        run: docker build -t $IMAGE_NAME:${{ github.sha }} .
+        run: docker build -t ${{ inputs.image-name }}:${{ github.sha }} .
 
   tests:
     name: Run Unit Tests
@@ -31,7 +35,7 @@ jobs:
       - name: Set Up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: ${{ inputs.python-version }}
 
       - name: Install Dependencies
         run: |
@@ -62,7 +66,7 @@ jobs:
       - name: Set Up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: ${{ inputs.python-version }}
 
       - name: Install Dependencies
         run: |
@@ -95,7 +99,7 @@ jobs:
       - name: Set Up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: ${{ inputs.python-version }}
 
       - name: Install Dependencies
         run: |
