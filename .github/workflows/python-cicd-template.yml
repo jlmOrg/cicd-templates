@@ -12,6 +12,15 @@ on:
         required: false
         type: string
         default: '3.13'
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+env:
+  ecr-registry: '550487074477.dkr.ecr.us-east-1.amazonaws.com'
+  ecr-region: 'us-east-1'
 
 jobs:
   docker-build:
@@ -23,6 +32,15 @@ jobs:
 
       - name: Build Docker Image
         run: docker build -t ${{ inputs.image-name }}:${{ github.sha }} .
+
+      - name: Save Image
+        run: docker save ${{ inputs.image-name }} > ${{ inputs.image-name }}.tar
+
+      - name: Upload Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.image-name }}
+          path: ${{ inputs.image-name }}.tar
 
   tests:
     name: Run Unit Tests
@@ -117,3 +135,37 @@ jobs:
         with:
           name: flake8-report
           path: flake8-report.xml
+
+  publish-ecr:
+    name: Publish to ECR
+    needs: [ docker-build, tests, test-coverage, lint ]
+    runs-on: ubuntu-latest
+#    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Docker Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.image-name }}
+          path: .
+
+      - name: Load Docker Image
+        run: docker load < ${{ inputs.image-name }}.tar
+
+      - name: Tag Image
+        run: docker tag ${{ inputs.image-name }}:${{ github.sha }} ${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
+
+      - name: Configure AWS Creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.ecr-region }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push image to ECR
+        run: docker push ${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
