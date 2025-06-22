@@ -12,12 +12,28 @@ on:
         required: false
         type: string
         default: '3.13'
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
 
 env:
   ecr-registry: '550487074477.dkr.ecr.us-east-1.amazonaws.com'
   ecr-region: 'us-east-1'
 
 jobs:
+  test-aws-creds:
+    name: Check ACCESS ID
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check AWS Access ID
+        run: echo "${{ secrets.AWS_ACCESS_KEY_ID }}"
+
+      - name: TEST
+        run: echo "echo test after"
+
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
