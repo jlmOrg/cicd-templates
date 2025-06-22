@@ -1,10 +1,7 @@
 name: CI/CD Pipeline
 
 on:
-  pull_request:
-    branches: [ master ]
-  push:
-    branches: [ master ]
+  workflow_call:
 
 env:
   IMAGE_NAME: python-hello-service
