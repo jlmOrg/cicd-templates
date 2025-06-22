@@ -23,17 +23,6 @@ env:
   ecr-region: 'us-east-1'
 
 jobs:
-  test-aws-creds:
-    name: Check ACCESS ID
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check AWS Access ID
-        run: echo "${{ secrets.AWS_ACCESS_KEY_ID }}"
-
-      - name: TEST
-        run: echo "echo test after"
-
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
