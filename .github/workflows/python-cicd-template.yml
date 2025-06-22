@@ -150,7 +150,7 @@ jobs:
         run: docker load < ${{ inputs.image-name }}.tar
 
       - name: Tag Image
-        run: docker tag $IMAGE_TAG $ECR_REGISTRY/${{ inputs.image-name }}:${{ github.sha }}
+        run: docker tag $IMAGE_TAG ${{ inputs.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
 
       - name: Configure AWS Creds
         uses: aws-actions/configure-aws-credentials@v4
@@ -163,4 +163,4 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push image to ECR
-        run: docker push $ECR_REGISTRY/${{ inputs.image-name }}:${{ github.sha }}
+        run: docker push ${{ inputs.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
