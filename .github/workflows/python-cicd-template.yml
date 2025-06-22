@@ -150,7 +150,7 @@ jobs:
         run: docker load < ${{ inputs.image-name }}.tar
 
       - name: Tag Image
-        run: docker tag $IMAGE_TAG ${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
+        run: docker tag ${{ inputs.image-name }} ${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
 
       - name: Configure AWS Creds
         uses: aws-actions/configure-aws-credentials@v4
