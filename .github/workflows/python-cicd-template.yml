@@ -17,6 +17,8 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
+      EKS_DEV_CLUSTER_NAME:
+        required: true
 
 env:
   ecr-registry: '550487074477.dkr.ecr.us-east-1.amazonaws.com'
@@ -167,5 +169,30 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Push image to ECR
+      - name: Push Image to ECR
         run: docker push ${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
+
+  deploy-dev:
+    name: Deploy to EKS
+    needs: publish-ecr
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.ecr-region }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region ${{ env.ecr-region }} --name ${{ secrets.EKS_DEV_CLUSTER_NAME }}
+
+      - name: Deploy Kubernetes
+        run: |
+          export IMAGE=${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
+          envsubst < k8s/deployment.yml | kubectl apply -f -
+          kubectl apply -f k8s/service.yml
