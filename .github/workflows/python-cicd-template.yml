@@ -17,11 +17,13 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
+      AWS_ACCOUNT_ID:
+        required: true
       EKS_DEV_CLUSTER_NAME:
         required: true
 
 env:
-  ecr-registry: '550487074477.dkr.ecr.us-east-1.amazonaws.com'
+  ecr-registry: 'dkr.ecr.us-east-1.amazonaws.com'
   ecr-region: 'us-east-1'
 
 jobs:
@@ -157,7 +159,7 @@ jobs:
         run: docker load < ${{ inputs.image-name }}.tar
 
       - name: Tag Image
-        run: docker tag ${{ inputs.image-name }}:${{ github.sha }} ${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
+        run: docker tag ${{ inputs.image-name }}:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
 
       - name: Configure AWS Creds
         uses: aws-actions/configure-aws-credentials@v4
@@ -170,7 +172,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push Image to ECR
-        run: docker push ${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
+        run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
 
   deploy-dev:
     name: Deploy to EKS
@@ -193,10 +195,10 @@ jobs:
 
       - name: Set Context
         run: |
-          kubectl config use-context arn:aws:eks:us-east-1:550487074477:cluster/dev-hello-service
+          kubectl config use-context arn:aws:eks:${{ env.ecr-region }}:${{ secrets.AWS_ACCOUNT_ID }}:cluster/${{ secrets.EKS_DEV_CLUSTER_NAME }}
 
       - name: Deploy Kubernetes
         run: |
-          export IMAGE=${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
+          export IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.${{ env.ecr-registry }}/${{ inputs.image-name }}:${{ github.sha }}
           envsubst < deploy/deployment.yml | kubectl apply -f -
           kubectl apply -f deploy/service.yml
