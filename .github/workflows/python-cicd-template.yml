@@ -208,7 +208,7 @@ jobs:
 
       - name: Deploy Helm chart
         run: |
-          helm upgrade --install python-hello-service python-services/python-service \
+          helm upgrade --install python-hello-service jlm-charts/python-api-service \
             --namespace default \
             --set name=python-hello-service \
             --set image.repository=${{ env.ecr-registry }}/${{ inputs.image-name }} \
