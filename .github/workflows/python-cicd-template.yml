@@ -216,6 +216,6 @@ jobs:
           helm upgrade --install python-hello-service jlm-charts/python-api-service \
             --namespace default \
             --set name=python-hello-service \
-            --set image.repository=${{ env.ecr-registry }}/${{ inputs.image-name }} \
+            --set image.repository=${{ secrets.AWS_ACCOUNT_ID }}.${{ env.ecr-registry }}/${{ inputs.image-name }} \
             --set image.tag=${{ github.sha }} \
             --wait
